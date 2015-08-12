@@ -19,7 +19,9 @@
     this._buckets = [this._createBucket()];
     this._state = CircuitBreaker.CLOSED;
 
-    this._startTicker();
+    // DAN change - capture the value returned from startTicker
+    this.interval = this._startTicker();
+    // DAN DEBUG console.log("Interval ID: ", this.interval);
   };
 
   CircuitBreaker.OPEN = 0;
@@ -57,6 +59,12 @@
     return this._state == CircuitBreaker.OPEN;
   };
 
+  // DAN CHANGE - make a function to stop the interval for various automated testing utilities
+  CircuitBreaker.prototype.shutdown = function() {
+    // DAN debug console.log("shutting down: ", this.interval);
+    clearInterval(this.interval);
+  };
+
   // Private API
   // -----------
 
@@ -66,6 +74,7 @@
     var bucketDuration = this.windowDuration / this.numBuckets;
 
     var tick = function() {
+      // DAN debug console.log("Tick called");
       if (self._buckets.length > self.numBuckets) {
         self._buckets.shift();
       }
@@ -83,7 +92,8 @@
       self._buckets.push(self._createBucket());
     };
 
-    setInterval(tick, bucketDuration);
+    // DAN CHANGE: return the setInterval
+    return setInterval(tick, bucketDuration);
   };
 
   CircuitBreaker.prototype._createBucket = function() {
